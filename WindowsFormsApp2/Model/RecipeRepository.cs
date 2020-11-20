@@ -1,66 +1,89 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
 namespace WindowsFormsApp2.Model
 {
+
     public class RecipeRepository
     {
-        private static List<RecipeCategory> _receiptCategories;
-        private static List<Recipe> _receipts;
-
-        public RecipeRepository()
+        public List<Recipe> GetAllRecipes(int id)
         {
-            if (_receiptCategories == null)
+            using (var conn = new SqlConnection(ConnectionString))
             {
-                _receiptCategories = new List<RecipeCategory>
-                {
-                    new RecipeCategory { Id = 1, Name = "Asiatiskt"},
-                    new RecipeCategory { Id = 2, Name = "Husmanskost"},
-                };
-                _receipts = new List<Recipe>
-                {
-                    new Recipe {Id = 1, Category = _receiptCategories.First(e=>e.Id == 1), Title = "Sushi", Ingredients = "Fisk, soja"},
-                    new Recipe { Id = 2, Category = _receiptCategories.First(e => e.Id == 2), Title = "Pannkakor", Ingredients = "Mjölk,mjöl,ägg,smör,sylt" },
-                    new Recipe { Id = 3, Category = _receiptCategories.First(e => e.Id == 1), Title = "Yakiniku", Ingredients = "Ris,entrocote,soja" }
-                };
+                conn.Open();
+                return conn.Query<Recipe>("select * from recipe").ToList();
             }
         }
-        public Recipe GetById(int id)
+
+        public List<Recipe> GetAll()
         {
-            return _receipts.FirstOrDefault(r => r.Id == id);
+            using (var conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                return conn.Query<Recipe>("select * from recipes").ToList();
+            }
         }
 
-
-
-        public void Add(Recipe newReceipt)
-        {
-            newReceipt.Id = _receipts.Max(r => r.Id) + 1;
-            if (newReceipt.Category == null)
-                newReceipt.Category = _receiptCategories.First();
-            _receipts.Add(newReceipt);
-        }
-
-        public void Update(Recipe receipt)
+        public void Insert(Recipe recipe)
         {
 
+            string sql = @"
+INSERT INTO [Recipe]
+            ([Title]
+            ,[Description]
+            ,[Ingredients]
+            ,[Category])
+    VALUES
+            (@Title
+            ,@Description
+            ,@Ingredients
+            ,@Category)
+GO
+
+";
+            using (var conn = new SqlConnection(connString))
+            {
+                conn.Open();
+                conn.Execute(sql, recipe);
+            }
+
+            
+
         }
 
-        public void Remove(int receiptId)
+        public void Update(Recipe recipe)
         {
-
+            string sql = @"UPDATE [Recipes]
+    SET [Title] = @Title
+       ,[Description] = @Description
+       ,[Ingredients] = @Ingrediens
+       ,[Category] = @Category
+    WHERE ID = @RID
+";
+            using (var conn = new SqlConnection(connString))
+            {
+                conn.Open();
+                conn.Execute(sql, recipe);
+            }
         }
 
-
-        public IEnumerable<Recipe> Search(string title, string catepory)
+        public void Delete(Recipe recipe)
         {
-            return _receipts.Where(r => r.Title.Contains(title));
+            var sql = "DELETE Recipe WHERE id = @Id";
+
+            using (var conn = new SqlConnection(connString))
+            {
+                conn.Open();
+                conn.Execute(sql, recipe);
+            }
         }
 
-
-
-        //public IEnumerable<Recipe> GetAll()
-        //{
-        //    return _receipts;
-        //}
     }
+    
+
+    
 }
+    

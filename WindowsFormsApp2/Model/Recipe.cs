@@ -7,5 +7,8 @@
         public string Description { get; set; }
         public string Ingredients { get; set; }
         public RecipeCategory Category { get; set; }
+
+
+        
     }
 }
